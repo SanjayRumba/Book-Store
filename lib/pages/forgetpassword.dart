@@ -1,8 +1,8 @@
 import 'package:book_shop/pages/OtpVerificationScreen.dart';
 import 'package:book_shop/pages/custombtn.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ForgotPassword extends StatefulWidget {
@@ -15,12 +15,7 @@ class ForgotPassword extends StatefulWidget {
 class _ForgotPasswordState extends State<ForgotPassword> {
   String? phone;
   final _formkey = GlobalKey<FormState>();
-
-  // Function to save the phone number to SharedPreferences
-  savePhoneToSP(String phone) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString("PhoneOtp", phone);
-  }
+  bool isSendingOTP = false; // Track if OTP is being sent
 
   void _showDialog(String title, String message) {
     showDialog(
@@ -43,31 +38,49 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   }
 
   void sendOtp() async {
-    try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: '+977$phone',
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
-          _showDialog('Success', 'OTP verification successful.');
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          _showDialog('Verification Failed', 'Error: ${e.message}');
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OtpVerificationScreen(
-                verificationId: verificationId,
-                phone: int.parse(phone!),
+    if (_formkey.currentState!.validate()) {
+      setState(() {
+        isSendingOTP = true;
+      });
+
+      try {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: '+977$phone',
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            await FirebaseAuth.instance.signInWithCredential(credential);
+            setState(() {
+              isSendingOTP = false;
+            });
+            _showDialog('Success', 'OTP verification successful.');
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            setState(() {
+              isSendingOTP = false;
+            });
+            _showDialog('Verification Failed', 'Error: ${e.message}');
+          },
+          codeSent: (String verificationId, int? resendToken) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OtpVerificationScreen(
+                  verificationId: verificationId,
+                  phone: int.parse(phone!),
+                ),
               ),
-            ),
-          );
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {},
-      );
-    } catch (e) {
-      _showDialog('Error', 'An error occurred: $e');
+            );
+            setState(() {
+              isSendingOTP = false;
+            });
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {},
+        );
+      } catch (e) {
+        setState(() {
+          isSendingOTP = false;
+        });
+        _showDialog('Error', 'An error occurred: $e');
+      }
     }
   }
 
@@ -122,9 +135,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 ],
                 validator: ((value) {
                   if (value!.isEmpty) {
-                    return "Fields are required to be filled";
-                  } else if (value.length < 10) {
-                    return "Phone number must have 10 digits";
+                    return "Phone number is required";
+                  } else if (value.length != 10) {
+                    return "Phone number must have exactly 10 digits";
                   }
                   return null;
                 }),
@@ -132,18 +145,13 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   setState(() {
                     phone = value;
                   });
-                  savePhoneToSP(value);
                 },
               ),
               const SizedBox(height: 10),
-              CustomButton(
-                text: "Send Otp",
-                onPressed: () {
-                  if (_formkey.currentState!.validate()) {
-                    sendOtp();
-                  }
-                },
-              )
+              ElevatedButton(
+                onPressed: isSendingOTP ? null : sendOtp,
+                child: Text(isSendingOTP ? 'Sending OTP...' : 'Send OTP'),
+              ),
             ],
           ),
         ),

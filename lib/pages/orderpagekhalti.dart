@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:book_shop/apiservices/apibloc.dart';
 import 'package:book_shop/apiservices/apievent.dart';
@@ -16,6 +17,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:khalti_flutter/khalti_flutter.dart';
+import 'package:http/http.dart' as http;
+
 
 class OrderPageEsewa extends StatefulWidget {
   String? Book;
@@ -466,61 +469,29 @@ class _OrderPageEsewaState extends State<OrderPageEsewa> {
       });
     }
   }
-
-  // void pickImage() async {
-  //   int? contact = phone;
-  //   final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-
-  //   if (image == null) return;
-
-  //   file1 = File(image.path);
-  //   setState(() {
-  //     file1;
-  //   });
-  //   List<String> extension = image.name.split('.');
-  //   final storageRef = FirebaseStorage.instance.ref();
-  //   var mountainsRef = storageRef.child('$contact.${extension[1]}');
-
-  //   try {
-  //     loadingBlur(true);
-  //     // Upload the file to Firebase Storage
-  //     await mountainsRef.putFile(file1!);
-  //     // Get the download URL of the uploaded file
-  //     final downloadURL =
-  //         await storageRef.child('$contact.${extension[1]}').getDownloadURL();
-  //     if (!mounted) return;
-
-  //     setState(() {
-  //       imagePath = downloadURL;
-  //     });
-  //     // updateImageInFirebase();
-  //     // Save the image path to shared preferences
-  //   } catch (e) {
-  //     loadingBlur(false);
-  //     print(e);
-  //   }
-  //   Future.delayed(const Duration(milliseconds: 2000), () {
-  //     loadingBlur(false);
-  //   });
-  // }
   void payWithKhaltiInApp() {
   setState(() {
     loader = true; // Start loading
   });
 
+
   KhaltiScope.of(context).pay(
     config: PaymentConfig(
-      amount: 1000, //in paisa
-      productIdentity: 'Product Id',
-      productName: 'Product Name',
-      mobileReadOnly: false,
+      amount: 10000, //in paisa
+      productIdentity: 'dell-g5-g5510-2021',
+  productName: 'Dell G5 G5510 2021',
+  productUrl: 'https://www.khalti.com/#/bazaar',
+  additionalData: { // Not mandatory; can be used for reporting purpose
+    'vendor': 'Khalti Bazaar',
+  },
     ),
     preferences: [
       PaymentPreference.khalti,
     ],
     onSuccess: (success) {
+      print(success);
       setState(() {
-        referenceId = success.idx;
+        referenceId = success.token;
       });
       
 
@@ -540,6 +511,7 @@ class _OrderPageEsewaState extends State<OrderPageEsewa> {
                     setState(() {
                       loader = false; // Stop loading
                     });
+                    verifyPayment(referenceId,10000);
                   });
                 },
               ),
@@ -600,6 +572,49 @@ class _OrderPageEsewaState extends State<OrderPageEsewa> {
       );
     },
   );
+}
+
+Future<void> verifyPayment(String token, int amountInPaisa) async {
+  final url = Uri.parse('https://khalti.com/api/v2/payment/verify/');
+  final headers = {
+    'Authorization': 'test_secret_key_4b88689175dd4c0785a5ed3192663d5a', // Replace with your Khalti secret key
+    'Content-Type': 'application/json',
+  };
+  final payload = {
+    'token': token,
+    'amount': amountInPaisa,
+  };
+
+  try {
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      // Successful verification, you can parse the response JSON here
+      if (response.body.isNotEmpty) {
+        final responseData = jsonDecode(response.body);
+        print('Payment verification successful: $responseData');
+      } else {
+        print('Payment verification successful, but no response body.');
+      }
+    } else {
+      // Handle error response
+      print('Payment verification failed. Status Code: ${response.statusCode}');
+      print('Error response: ${response.body}');
+      if (response.body.isNotEmpty) {
+        final errorData = jsonDecode(response.body);
+        print('Error message: ${errorData['error_key']} - ${errorData['token'].join(", ")}');
+      } else {
+        print('No error message provided.');
+      }
+    }
+  } catch (e) {
+    // Handle network or other errors
+    print('Error: $e'); 
+  }
 }
 
 

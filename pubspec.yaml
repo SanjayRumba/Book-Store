@@ -38,6 +38,8 @@ dependencies:
   flare_flutter: ^3.0.2
   url_launcher: ^6.1.12
   khalti_flutter: ^3.0.0 # Updated to a version compatible with Flutter 2.x and null safety
+  http: ^1.1.0
+  dio: ^5.3.3
 
 dev_dependencies:
   flutter_test:

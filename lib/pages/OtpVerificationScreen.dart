@@ -81,7 +81,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset("assets/images/immigration.png",width: 100,height: 100,),
+              // Image.asset("assets/images/immigration.png",width: 100,height: 100,),
               const SizedBox(height: 20,),
               Text(
                 'Enter the OTP sent to +977-${widget.phone}',

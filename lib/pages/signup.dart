@@ -331,38 +331,7 @@ class _SignupPageState extends State<SignupPage> {
               },
             ),
           ),
-          // Padding(
-          //   padding: const EdgeInsets.only(top: 30, left: 130, bottom: 20),
-          //   child: Row(
-          //     children: [
-          //       const Text(
-          //         "Already have an account? ",
-          //         style: TextStyle(
-          //           fontSize: 16,
-          //           fontFamily: "Andika",
-          //         ),
-          //       ),
-                // InkWell(
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const LoginForm(),
-                //       ),
-                //     );
-                //   },
-                //   child: const Text(
-                //     "Login in",
-                //     style: TextStyle(
-                //       fontSize: 16,
-                //       fontFamily: "Andika",
-                //       color: Color(0xFF3173BF),
-                //     ),
-                //   ),
-                // ),
-          //     ],
-          //   ),
-          // ),
+          
         ],
       ),
     );

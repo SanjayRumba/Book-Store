@@ -8,13 +8,10 @@ import 'package:book_shop/pages/customform.dart';
 import 'package:book_shop/pages/settings.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart'; // Import the flutter_spinkit package
 
 class AddBooks extends StatefulWidget {
   AddBooks({Key? key}) : super(key: key);
@@ -34,7 +31,26 @@ class _AddBooksState extends State<AddBooks> {
   String? bookName, selectedCategory;
   String? author, dropDownValue, photo;
   double? oldPrice, newPrice;
-  List<String> cList = ["Poetry", "Novel", "Fiction", "Story", "Thriller", "Horror Fiction", "History Fiction", "Text book", "Comic", "Mystery", "Fantasy", "True Crime", "Bio Graphics", "Romance", "Cook Books", "Essay"];
+  List<String> cList = [
+    "Poetry",
+    "Novel",
+    "Fiction",
+    "Story",
+    "Thriller",
+    "Horror Fiction",
+    "History Fiction",
+    "Textbook",
+    "Comic",
+    "Mystery",
+    "Fantasy",
+    "True Crime",
+    "Biographics",
+    "Romance",
+    "Cookbooks",
+    "Essay"
+  ];
+
+  bool saving = false; // Added saving variable
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +71,11 @@ class _AddBooksState extends State<AddBooks> {
               textColor: Colors.white,
               fontSize: 16.0,
             );
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const BottomNav()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => const BottomNav()));
           } else {
             const snackBar = SnackBar(
-              content: Text('failed to register'),
+              content: Text('Failed to register'),
             );
 
             ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -72,7 +89,16 @@ class _AddBooksState extends State<AddBooks> {
             alignment: Alignment.bottomCenter,
             children: [
               addBookUi(),
-              // loader ? Helper(context).BackdropFilter(context) : const SizedBox()
+              saving
+                  ? Container(
+                      child: Center(
+                        child: SpinKitCircle(
+                          color: Colors.blue, // Set the color of the circular progress indicator
+                          size: 50.0, // Set the size of the circular progress indicator
+                        ),
+                      ),
+                    )
+                  : SizedBox(),
             ],
           ),
         ),
@@ -104,17 +130,20 @@ class _AddBooksState extends State<AddBooks> {
           ),
           Center(
             child: SizedBox(
-                height: 60,
-                width: 60,
-                child: InkWell(
-                  onTap: () {
-                    pickImage();
-                  },
-                  child: imagePath!.isEmpty ? Image.asset("assets/images/profile.png") : CircleAvatar(
-                    radius: 40,
-                    backgroundImage: NetworkImage(imagePath!),
-                  ),
-                )),
+              height: 60,
+              width: 60,
+              child: InkWell(
+                onTap: () {
+                  pickImage();
+                },
+                child: imagePath.isEmpty
+                    ? Image.asset("assets/images/profile.png")
+                    : CircleAvatar(
+                        radius: 40,
+                        backgroundImage: NetworkImage(imagePath),
+                      ),
+              ),
+            ),
           ),
           const SizedBox(
             height: 10,
@@ -131,11 +160,11 @@ class _AddBooksState extends State<AddBooks> {
             height: 20,
           ),
           CustomForm(
-            hintText: " Book Name",
+            hintText: "Book Name",
             prefixIcon: const Icon(Icons.book_outlined),
             validator: ((value) {
               if (value!.isEmpty) {
-                return "field are required to be filled";
+                return "Field is required to be filled";
               } else if (!RegExp("(?=.*[A-Z])").hasMatch(value)) {
                 return "Book name must contain at least one uppercase letter\n";
               }
@@ -152,7 +181,7 @@ class _AddBooksState extends State<AddBooks> {
             hintText: "Author",
             validator: ((value) {
               if (value!.isEmpty) {
-                return "field are required to be filled";
+                return "Field is required to be filled";
               }
               return null;
             }),
@@ -164,11 +193,11 @@ class _AddBooksState extends State<AddBooks> {
           ),
           CustomForm(
             keyboardType: TextInputType.number,
-            hintText: " Old Price",
+            hintText: "Old Price",
             prefixIcon: const Icon(Icons.price_change),
             validator: ((value) {
               if (value!.isEmpty) {
-                return "field are required to be filled";
+                return "Field is required to be filled";
               }
               return null;
             }),
@@ -180,11 +209,11 @@ class _AddBooksState extends State<AddBooks> {
           ),
           CustomForm(
             keyboardType: TextInputType.number,
-            hintText: " New Price",
+            hintText: "New Price",
             prefixIcon: const Icon(Icons.price_change),
             validator: ((value) {
               if (value!.isEmpty) {
-                return "field are required to be filled";
+                return "Field is required to be filled";
               }
               return null;
             }),
@@ -205,19 +234,22 @@ class _AddBooksState extends State<AddBooks> {
               height: 55,
               width: MediaQuery.of(context).size.width * 0.9,
               child: DropdownButtonFormField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    // fillColor: const Color.fromARGB(255, 245, 239, 239),
-                    // filled: true,
-                    hintText: "Select Category",
-                    prefixIcon: Icon(Icons.people_outlined),
-                    hintStyle: TextStyle(fontFamily: "Andika", fontSize: 16),
-                  ),
-                  value: selectedCategory,
-                  items: cList.map((e) => DropdownMenuItem(child: Text(e, style: const TextStyle(fontSize: 16)), value: e)).toList(),
-                  onChanged: (value) {
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  hintText: "Select Category",
+                  prefixIcon: Icon(Icons.people_outlined),
+                  hintStyle: TextStyle(fontFamily: "Andika", fontSize: 16),
+                ),
+                value: selectedCategory,
+                items: cList
+                    .map((e) => DropdownMenuItem(child: Text(e, style: const TextStyle(fontSize: 16)), value: e))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
                     selectedCategory = value as String;
-                  }),
+                  });
+                },
+              ),
             ),
           ),
           const SizedBox(
@@ -232,6 +264,10 @@ class _AddBooksState extends State<AddBooks> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     try {
+                      setState(() {
+                        saving = true; // Set saving to true when saving starts
+                      });
+
                       BlocProvider.of<ApiBloc>(context).add(AddBookEvent(
                         bookName: bookName,
                         category: selectedCategory,
@@ -242,6 +278,9 @@ class _AddBooksState extends State<AddBooks> {
                       ));
                     } catch (e) {
                       loadingBlur(false);
+                      setState(() {
+                        saving = false; // Set saving to false when saving fails
+                      });
                     }
                   }
                 },

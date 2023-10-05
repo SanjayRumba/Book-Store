@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
     return BlocProvider(
       create: (context) => ApiBloc(),
       child: KhaltiScope(
-        publicKey: "test_public_key_af80070fce3b4c0884b5e6f443654816",
+        publicKey: "test_public_key_8e7bd5511ab243baa5c81a69f3ff2a53",
         enabledDebugging: true,
         builder: (context, navKey) {
           return MaterialApp(
@@ -45,6 +45,10 @@ class MyApp extends StatelessWidget {
             ),
             home: SplashScreen(),
             navigatorKey: navKey,
+            supportedLocales: const[
+              Locale('en', 'US'),
+              Locale('ne', 'NP'),
+            ],
             localizationsDelegates: const [KhaltiLocalizations.delegate],
           );
         },
